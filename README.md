@@ -3,6 +3,9 @@
 API для аутентификации пользователей и сохранения фильмов.
 
 ## Ссылка на backend проект 
+https://api.doly.nomoredomainsrocks.ru
+
+Публичный IP: 51.250.17.200
 
 ## Ссылка на репозиторий
 https://github.com/DashaDoly/movies-explorer-api/tree/level-1
