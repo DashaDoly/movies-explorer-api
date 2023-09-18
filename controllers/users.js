@@ -8,7 +8,7 @@ const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
 const { USER_CONFLICT_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_MESSAGE } = require('../utils/constants');
 
-const { SECRET_KEY = 'secret-key' } = process.env;
+const { SECRET_KEY } = require('../config');
 
 module.exports.createUser = (req, res, next) => {
   const {
@@ -41,21 +41,19 @@ module.exports.getMeUser = (req, res, next) => {
 };
 
 module.exports.editUser = (req, res, next) => {
-  const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: 'true', runValidators: true }) // new - для возврата обновленных данных, runValidators - для валидации полей
+  const { name, email } = req.body;
+  User.findByIdAndUpdate(req.user._id, { name, email }, { new: 'true', runValidators: true }) // new - для возврата обновленных данных, runValidators - для валидации полей
     .orFail()
     .then((user) => { res.status(HTTP_STATUS_OK).send(user); }) // status = 200
     .catch((err) => {
-      switch (err.constructor) {
-        case mongoose.Error.DocumentNotFoundError:
-          next(new NotFoundError(USER_NOT_FOUND_ERROR_MESSAGE));
-          break;
-        case mongoose.Error.ValidationError:
-          next(new BadRequestError(err.message));
-          break;
-        default:
-          next(err);
-          break;
+      if (err.code === 11000) {
+        next(new ConflictError(USER_CONFLICT_ERROR_MESSAGE));
+      } else if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError(err.message));
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError(USER_NOT_FOUND_ERROR_MESSAGE));
+      } else {
+        next(err);
       }
     });
 };
